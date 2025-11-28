@@ -1,0 +1,2 @@
+# nextjs_de_tsukuru_AIapplication
+udemyのネクストjsのやつ
