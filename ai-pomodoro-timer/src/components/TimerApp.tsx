@@ -1,6 +1,8 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+
 import TimerDisplay from "@/components/TimerDisplay";
 import Controls from "@/components/Controls";
 import MetadataUpdater from "@/components/Metadataupdater";
@@ -40,7 +42,7 @@ export default function TimerApp() {
             minutes: newMode === 'work' ? workDuration : breakDuration,
             seconds: 0,
         })
-        setIsRunning(false);
+        setIsRunning(autoStart);
     }
 
     const handleStart = () => {
@@ -72,11 +74,14 @@ export default function TimerApp() {
                             if (prev.seconds === 0) {
                                 if (prev.minutes === 0) {
                                     setIsRunning(false);
-                                    toggleMode();
+                                    
                                     if (mode==='work') {
                                         void confetti();
                                     }
                                     void playNotificationSound();
+                                    setTimeout(() => {
+                                        toggleMode();
+                                    }, 100)
                                     return prev;
                                 }
                                 return {minutes: prev.minutes - 1, seconds: 59}
@@ -126,6 +131,8 @@ export default function TimerApp() {
                     mode={mode}
                 />
                 <CardFooter className="flex flex-col gap-4 w-full max-w-[200px] mx-auto">
+                    
+                    {/* 作業時間の設定 */}
                     <div className="flex items-center gap-2">
                         <label className="text-sm font-medium min-w-[4.5rem]">作業時間</label>
                         <select className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -145,7 +152,8 @@ export default function TimerApp() {
 
                         </select>
                     </div>
-
+                    
+                    {/* 休憩時間の設定 */}
                     <div className="flex items-center gap-2">
                         <label className="text-sm font-medium min-w-[4.5rem]">休憩時間</label>
                         <select className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -164,7 +172,16 @@ export default function TimerApp() {
                             })}
                         </select>
                     </div>
-                   
+
+                    {/* 自動開始の設定 */}
+                    <div className="flex items-center gap-2 w-full justify-between">
+                        <label className="text-sm font-medium min-w-[4.5rem]">自動開始</label>
+                        <Switch 
+                            checked={autoStart}
+                            onCheckedChange={() => setAutoStart(!autoStart)}
+                        />
+
+                    </div>
                 </CardFooter>
             </Card>
         </div>
