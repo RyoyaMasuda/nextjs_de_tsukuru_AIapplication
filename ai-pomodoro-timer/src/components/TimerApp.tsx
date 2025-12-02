@@ -3,18 +3,19 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import Controls from './Controls';
-import MetadataUpdater from './Metadataupdater';
+import MetadataUpdater from './MetadataUpdater';
+import RefreshSuggestion from './RefreshSuggestion';
 import TimerDisplay from './TimerDisplay';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useReward } from 'react-rewards';
 import { playNotificationSound } from '@/utils/sound';
-import {generateRefreshSuggestion} from '@/utils/gemini';
+import { generateRefreshSuggestion } from '@/utils/gemini';
  
 // タイマーのモードを表す型
 type Mode = 'work' | 'break';
-
+ 
 export default function TimerApp() {
-  const { reward: confetti, isAnimating } = useReward('confettiReward', 'confetti', {
+  const { reward: confetti } = useReward('confettiReward', 'confetti', {
     elementCount: 100,
     spread: 70,
     decay: 0.93,
@@ -37,6 +38,9 @@ export default function TimerApp() {
   // 自動開始の設定
   const [autoStart, setAutoStart] = useState(false);
  
+  // リフレッシュ提案
+  const [refreshSuggestion, setRefreshSuggestion] = useState<string | null>(null);
+ 
   // モードを切り替える関数
   const toggleMode = () => {
     // 現在のモードを反対のモードに切り替える
@@ -49,6 +53,12 @@ export default function TimerApp() {
       minutes: newMode === 'work' ? workDuration : breakDuration,
       seconds: 0,
     });
+ 
+    if (newMode === 'break') {
+      generateRefreshSuggestion()
+        .then((suggestion) => setRefreshSuggestion(suggestion))
+        .catch(console.error);
+    }
  
     // 自動開始がONの場合は次のセッションを自動的に開始
     setIsRunning(autoStart);
@@ -100,7 +110,7 @@ export default function TimerApp() {
           // 秒数が1以上の場合は、秒を1減らす
           return { ...prev, seconds: prev.seconds - 1 };
         });
-      }, 1); // 動作確認用に1ミリ秒ごとに実行
+      }, 1);
     }
  
     // クリーンアップ関数（コンポーネントのアンマウント時やisRunningが変わる前に実行される）
@@ -111,16 +121,7 @@ export default function TimerApp() {
       }
     };
   }, [isRunning]); // isRunningが変わったときだけこのエフェクトを再実行
-  
-
-  useEffect(() => {
-    const testGemini = async () => {
-      const suggestion = await generateRefreshSuggestion();
-      console.log(suggestion);
-    };
-    void testGemini();
-  }, [])
-  
+ 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
       <span
@@ -210,6 +211,10 @@ export default function TimerApp() {
         minutes={timeLeft.minutes}
         seconds={timeLeft.seconds}
         mode={mode}
+      />
+      <RefreshSuggestion
+        suggestion={refreshSuggestion}
+        onClose={() => setRefreshSuggestion(null)}
       />
     </div>
   );
